@@ -1,0 +1,15 @@
+transitions = {0.DFAs}
+start = "{0.name}"
+
+def matches(string):
+    try:
+        DFA_node, matching = transitions[start]
+        for ch in string:
+            DFA_node, matching = transitions[DFA_node[ch]]
+    except KeyError:
+        return False
+    else:
+        if matching:
+            return True
+        else:
+            return False
