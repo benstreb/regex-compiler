@@ -122,12 +122,6 @@ class NFA:
     def __repr__(self):
         return str(self.num)
 
-def add_nums(nfa):
-    current_num = 0
-    for node in nfa:
-        current_num += 1
-        node.num = current_num
-
 ################################################################################
 ##---------------------------Construction Functions---------------------------##
 ################################################################################
