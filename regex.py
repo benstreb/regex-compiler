@@ -75,9 +75,7 @@ def test_parse(regex):
         print(parse(regex, True))
 
 def create_NFA(parseTree):
-    NFA = NFAcreator.walk_parse_tree(parseTree)
-    NFAcreator.add_nums(NFA)
-    return NFA
+    return NFAcreator.walk_parse_tree(parseTree)
 
 def run_test(regex, should_match, should_not_match):
     print("Testing \"", regex, '"', sep="")

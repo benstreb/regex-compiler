@@ -1,7 +1,11 @@
 #coding=utf-8
 import collections
 
-#This is one of the ugliest functions I've written in a while.
+#Here is the logic for transforming a parse tree. It's somewhat ugly, but
+#pretty simple conceptually, just an in-order traversal of the tree creating
+#NFA nodes according to the type of parse tree node (a Visitor-like solution
+#might be better, but that would be a not-entirely-trivial architectural
+#shift, so it will have to wait for now).
 def walk_parse_tree(parseTree):
     #Group - combinations of or's
     if parseTree.non_terminal == "regex":
@@ -62,24 +66,22 @@ def walk_parse_tree(parseTree):
     return
 
 class NFA:
-    created = 1
     #if negated is true, then non-epsilon transitions
     def __init__(self, links=None, debug=False):
         if links is None:
             links = {}
         self.links = links
-        self.num = 0
-        self.create_num = NFA.created
-        NFA.created += 1
+        self.num = id(self)
+        #NFA.created += 1
         self.matching = False
-        print_str = str(self.create_num) + ":"
+        print_str = str(self.num) + ":"
         if debug:
             for link in self.links.values():
                 for node in link:
-                    print_str += " " + str(node.create_num) + ","
+                    print_str += " " + str(node.num) + ","
             print(print_str)
     
-    def add_link(self, char, transition_to, debug=False):
+    def _add_link(self, char, transition_to, debug=False):
         if char not in self.links:
             self.links[char] = transition_to
         else:
@@ -90,12 +92,6 @@ class NFA:
                 print_str += " " + str(link.create_num) + ","
             print(print_str)
 
-    def NFA_str(self):
-        ret_str = ""
-        for node in self:
-            ret_str += str(node)
-        return ret_str
-    
     ##TODO: Make this work for certain escaped characters. And anything else.
     def __str__(self):
         ret_str = str(self.num) + (" -- matching" if self.matching else "")
@@ -144,8 +140,8 @@ def construct_or(p1, p2, debug=False):
     newStartNFA = NFA({"":{p1_start, p2_start}})
     newEndNFA = NFA()
     newEndNFA.matching = True
-    p1_end.add_link("", {newEndNFA})
-    p2_end.add_link("", {newEndNFA})
+    p1_end._add_link("", {newEndNFA})
+    p2_end._add_link("", {newEndNFA})
     return (newStartNFA, newEndNFA)
 
 def construct_concat(p1, p2, debug=False):
@@ -153,14 +149,14 @@ def construct_concat(p1, p2, debug=False):
     (p1_start, p1_end) = p1
     (p2_start, p2_end) = p2
     p1_end.matching = False
-    p1_end.add_link("", {p2_start})
+    p1_end._add_link("", {p2_start})
     return (p1_start, p2_end)
 
 def construct_star(p, debug=False):
     if debug: print("construct_star")
     (p_start, p_end) = p
-    p_start.add_link("", {p_end})
-    p_end.add_link("", {p_start})
+    p_start._add_link("", {p_end})
+    p_end._add_link("", {p_start})
     return (p_start, p_end)
 
 def construct_star_old(p, debug=False):
@@ -171,8 +167,8 @@ def construct_star_old(p, debug=False):
     newEndNFA = NFA()
     newEndNFA.matching = True
     newStartNFA = NFA({"":{p_start, newEndNFA}})
-    p_end.add_link("", {newEndNFA})
-    newEndNFA.add_link("", {newStartNFA})
+    p_end._add_link("", {newEndNFA})
+    newEndNFA._add_link("", {newStartNFA})
     return (newStartNFA, newEndNFA)
 
 def construct_question(p, debug=False):
@@ -184,7 +180,7 @@ def construct_question(p, debug=False):
 def construct_plus(p, debug=False):
     if debug: print("construct_plus")
     (p_start, p_end) = p
-    p_end.add_link("", {p_start})
+    p_end._add_link("", {p_start})
     return (p_start, p_end)
 
 def construct_char(char, debug=False):
