@@ -1,5 +1,6 @@
-transitions = {0.DFAs}
-start = "{0.name}"
+#regex = '{0}'
+transitions = {1.DFAs}
+start = '{1.name}'
 
 def matches(string):
     try:

@@ -140,7 +140,7 @@ def generate(regex, file_name):
          open(file_name, 'w') as instantiation:
         template = "".join(line for line in template)
         DFA = create_DFA(create_NFA(parse(regex)))
-        print(template.format(DFA), file=instantiation)
+        print(template.format(regex, DFA), file=instantiation)
         NFAtoDFA.DFA.reset()
 
 # regex = input("Enter regex: ")
