@@ -31,7 +31,7 @@ class DFA:
         #print("Hi", DFA.created)
         if links is None:
             links = {}
-        name = NFA_set_name(NFA_nodes)
+        name = _NFA_set_name(NFA_nodes)
         if name in cls.DFAs:
             return cls.DFAs[name]
         else:
@@ -50,7 +50,7 @@ class DFA:
     def __define(self, name, matching, links, debug):
         self.name = name
         self.links = links
-        self.num = 0
+        self.num = id(self)
         self.created = DFA.created
         DFA.created += 1
         self.matching = matching
@@ -62,7 +62,7 @@ class DFA:
             print(print_str)
         self.DFAs = type(self).DFAs
     
-    def add_link(self, char, transition_to, debug=False):
+    def _add_link(self, char, transition_to, debug=False):
         #print(self.created, char, transition_to.created)
         if char not in self.links:
             self.links[char] = transition_to
@@ -77,12 +77,6 @@ class DFA:
                 print_str += " " + str(link.created) + ","
             print(print_str)
 
-    def DFA_str(self):
-        ret_str = ""
-        for node in self:
-            ret_str += str(node)
-        return ret_str
-    
     ##TODO: Make this work for certain escaped characters. And anything else.
     def __str__(self):
         ret_str = str(self.num) + (" -- matching" if self.matching else "")
@@ -115,15 +109,11 @@ class DFA:
         return hash(self.name)
     
     def __repr__(self):
-        return "({"+ "".join("'"+link+"':'"+to.name+"'," for link, to in self.links.items()) + "}, "+str(self.matching)+")"
+        return ("({"+ "".join("'"+link+"':'"+to.name+"',"
+                              for link, to in self.links.items())
+                + "}, "+str(self.matching)+")")
 
-def add_nums(dfa):
-    current_num = 0
-    for node in dfa:
-        current_num += 1
-        node.num = current_num
-
-def NFA_set_name(NFA_set):
+def _NFA_set_name(NFA_set):
     return reduce((lambda s,n:s+str(n.num)+" "), NFA_set, "")
 
 def to_DFA(nfa):
@@ -145,7 +135,7 @@ def to_DFA(nfa):
             new_NFA_set.update(_e_closure(new_NFA_set))
             if new_NFA_set != set():
                 new_DFA_node = DFA(new_NFA_set)
-                DFA_node.add_link(char, new_DFA_node)
+                DFA_node._add_link(char, new_DFA_node)
                 if new_DFA_node not in DFA_set:
                     DFA_set.add(DFA_node)
                     DFA_queue.appendleft((new_DFA_node, new_NFA_set))

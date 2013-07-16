@@ -12,7 +12,6 @@ def matches(regex, string):
     else:
         DFA = create_DFA(create_NFA(parse(regex)))
         DFA_cache[regex] = DFA
-        #print(DFA.DFA_str())
     try:
         DFA_node = DFA
         for ch in string:
@@ -130,9 +129,7 @@ def pathological_test(n):
         ())
 
 def create_DFA(NFA):
-    DFA = NFAtoDFA.to_DFA(NFA)
-    NFAtoDFA.add_nums(DFA)
-    return DFA
+    return NFAtoDFA.to_DFA(NFA)
 
 def generate(regex, file_name):
     with open("regexoutput.py.template", 'r') as template, \
