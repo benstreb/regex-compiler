@@ -66,7 +66,6 @@ def walk_parse_tree(parseTree):
     return
 
 class NFA:
-    #if negated is true, then non-epsilon transitions
     def __init__(self, links=None, debug=False):
         if links is None:
             links = {}
@@ -125,6 +124,15 @@ class NFA:
 ################################################################################
 ##---------------------------Construction Functions---------------------------##
 ################################################################################
+#The NFA construction algorithm works such that each recursively-generated
+#NFA fragment has exactly one entry and exit state. Accordingly, in all of
+#these functions p is a pair of NFA nodes - the entry and exit nodes for an
+#NFA fragment.
+#Remember: ε represents the empty string.
+
+#construct_or works by creating a new entry and exit state with ε-transitions
+#from the new entry point to both old entry points and from both old exit
+#points to the new exit point.
 def construct_or(p1, p2, debug=False):
     if debug: print("construct_or")
     (p1_start, p1_end) = p1
@@ -138,6 +146,8 @@ def construct_or(p1, p2, debug=False):
     p2_end._add_link("", {newEndNFA})
     return (newStartNFA, newEndNFA)
 
+#construct_concat just adds an ε-transition from p1's exit to p2's entrance
+#and returns p1's entrance and p2's exit.
 def construct_concat(p1, p2, debug=False):
     if debug: print("construct_concat")
     (p1_start, p1_end) = p1
@@ -146,6 +156,7 @@ def construct_concat(p1, p2, debug=False):
     p1_end._add_link("", {p2_start})
     return (p1_start, p2_end)
 
+#construct star adds an ε-transition to and from both ends of p.
 def construct_star(p, debug=False):
     if debug: print("construct_star")
     (p_start, p_end) = p
@@ -153,6 +164,11 @@ def construct_star(p, debug=False):
     p_end._add_link("", {p_start})
     return (p_start, p_end)
 
+#This is the exact algorithm described in the Dragon book for kleene star,
+#but it seems to produce unnecessarily many transitions, so it's deprecated,
+#but kept for informational purposes.
+#The difference is that this adds a new entry and exit before adding the
+#ε-transitions.
 def construct_star_old(p, debug=False):
     """deprecated"""
     if debug: print("construct_star")
@@ -165,18 +181,22 @@ def construct_star_old(p, debug=False):
     newEndNFA._add_link("", {newStartNFA})
     return (newStartNFA, newEndNFA)
 
+#construct_question simply adds an ε-transition from p's entry to p's exit.
 def construct_question(p, debug=False):
     if debug: print("construct_question")
     (p_start, p_end) = p
     newStartNFA = NFA({"":{p_start, p_end}})
     return (newStartNFA, p_end)
 
+#construct_plus simply adds an ε-transition from p's exit to p's entry.
 def construct_plus(p, debug=False):
     if debug: print("construct_plus")
     (p_start, p_end) = p
     p_end._add_link("", {p_start})
     return (p_start, p_end)
 
+#construct_char creates a new entry and exit with a transition on the given
+#character from the entry to the exit.
 def construct_char(char, debug=False):
     if debug: print("construct_char:", char)
     newEndNFA = NFA()
@@ -184,15 +204,18 @@ def construct_char(char, debug=False):
     newStartNFA = NFA({char:{newEndNFA}})
     return (newStartNFA, newEndNFA)
 
-#Eventually, I will become less full of fail and actually implement this
+#construct_group_stub doesn't do anything because groups aren't supported right
+#now.
 def construct_group_stub(debug=False):
     if debug: print("construct_group_stub")
+    raise NotImplementedError
     newEndNFA = NFA()
     newStartNFA = NFA({"": {newEndNFA}})
     newEndNFA.matching = True
     return (newStartNFA, newEndNFA)
 
-## This function creates the group. Other functions will then add the links.
+#This function creates the group. Other functions will then add the links.
+#At least in theory. At the moment, it isn't used.
 def construct_group(char_negate, debug=False):
     if debug: print("construct_group")
     newEndNFA = NFA()
