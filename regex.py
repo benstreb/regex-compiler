@@ -1,3 +1,4 @@
+#!/usr/bin/python3
 import regexparser
 import NFAcreator
 import NFAtoDFA
