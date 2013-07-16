@@ -28,43 +28,50 @@ def matches(regex, string):
             return False
     
 
+#def tokenize(regex):
+#    index = 0
+#    token = None
+#    next_token = regex[0]
+#    for char in regex[1:]:
+#        token = next_token
+#        next_token = char
+#        yield from repeat(token, next_token)
+#    token = next_token
+#    next_token = "eof"
+#    yield from repeat(token, next_token)
+
+#def repeat(token, next_token):
+#    repeat = yield (token, next_token)
+#    while repeat is not None:
+#        repeat = yield (token, next_token)
+
 def tokenize(regex):
-    repeat = True
-    index = 0
-    strLen = len(regex)
-    token = None
-    next_token = None
-    while index < strLen:
-        if regex[index].isspace():
-            pass
-        else:
-            token = next_token
-            next_token = regex[index]
-            repeat = yield (token, next_token)
-            while repeat is not None:
-                repeat = yield (token, next_token)
-        index += 1
-    token = next_token
-    next_token = "eof"
-    repeat = yield (token, next_token)
-    while repeat is not None:
-        repeat = yield (token, next_token)
+    for char in regex:
+        yield from repeat(char)
+    yield from repeat("eof")
+
+def repeat(token):
+    repeat = yield token
+    while repeat is not regexparser.CONSUME:
+        repeat = yield token
 
 def parse(regex, debug = False):
     return regexparser.parse_regex(tokenize(regex), debug)
     
     
 def test_parse(regex):
+    print('Testing parse of "', regex, '"', sep="")
     retry = False
     try:
         print(parse(regex).get_regex())
         print()
         print(parse(regex))
         print("\n")
-    except:
+    except Exception as e:
+        print("Suppressed Exception: {}".format(e))
         retry = True
     if retry:
-        print(parse(regex, True).get_regex())
+        print(parse(regex, True))
 
 def create_NFA(parseTree):
     NFA = NFAcreator.walk_parse_tree(parseTree)
@@ -84,16 +91,18 @@ def run_test(regex, should_match, should_not_match):
     for not_match in should_not_match:
         if regextest.matches(not_match):
             print('/!\\ Matched "', not_match, '" incorrectly /!\\', sep="")
-    try:
-        input()
-    except EOFError:
-        pass
 
 #TODO: Far off: Add special escape characters.
 def run_tests():
     run_test("a",
-        ("a"),
+        ("a",),
         ("b", "aa"))
+    run_test(r"\+",
+        ("+",),
+        ("\\", r"\+"))
+    run_test("abc",
+        ("abc",),
+        ("ab", "abca", "bac"))
     run_test("a*b*",
         ("", "a", "b", "ab", "aaabb"),
         ("c", "aaabbc"))
@@ -105,9 +114,6 @@ def run_tests():
     run_test("abc|a?",
         ("", "abc", "a"),
         ("abca", "aa", "d"))
-    run_test(r"\+",
-        ("+"),
-        ("\\", r"\+"))
     run_test("a(a|b)c*",
         ("aa", "abc", "aacccc"),
         ("ac", "aacaac", "abcbc"))
@@ -130,7 +136,8 @@ def create_DFA(NFA):
     return DFA
 
 def generate(regex, file_name):
-    with open("regexoutput.py.template", 'r') as template, open(file_name, 'w') as instantiation:
+    with open("regexoutput.py.template", 'r') as template, \
+         open(file_name, 'w') as instantiation:
         template = "".join(line for line in template)
         DFA = create_DFA(create_NFA(parse(regex)))
         print(template.format(DFA), file=instantiation)
