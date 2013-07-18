@@ -25,10 +25,10 @@ def _move(NFA_nodes, char):
     return ret_set
 
 class DFA:
-    created = 1
+    num = 1
     DFAs = dict()
     def __new__(cls, NFA_nodes, links=None, debug=False):
-        #print("Hi", DFA.created)
+        #print("Hi", DFA.num)
         if links is None:
             links = {}
         name = _NFA_set_name(NFA_nodes)
@@ -45,25 +45,22 @@ class DFA:
     @classmethod
     def reset(cls):
         cls.DFAs = {}
-        cls.created = 1
     
     def __define(self, name, matching, links, debug):
         self.name = name
         self.links = links
         self.num = id(self)
-        self.created = DFA.created
-        DFA.created += 1
         self.matching = matching
-        print_str = str(self.created) + ":"
+        print_str = str(self.num) + ":"
         if debug:
             for link in self.links.values():
                 for node in link:
-                    print_str += " " + str(node.created) + ","
+                    print_str += " " + str(node.num) + ","
             print(print_str)
         self.DFAs = type(self).DFAs
     
     def _add_link(self, char, transition_to, debug=False):
-        #print(self.created, char, transition_to.created)
+        #print(self.num, char, transition_to.num)
         if char not in self.links:
             self.links[char] = transition_to
         else:
@@ -72,9 +69,9 @@ class DFA:
             raise TypeError("DFAs cannot have more than one transition for the"+
                             " same character")
         if debug:
-            print_str = str(self.created) + ":"
+            print_str = str(self.num) + ":"
             for link in self.links[char]:
-                print_str += " " + str(link.created) + ","
+                print_str += " " + str(link.num) + ","
             print(print_str)
 
     ##TODO: Make this work for certain escaped characters. And anything else.
