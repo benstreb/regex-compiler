@@ -1,4 +1,6 @@
 #!/usr/bin/python3
+import argparse
+
 import regexparser
 import NFAcreator
 import NFAtoDFA
@@ -152,4 +154,19 @@ def generate(regex, file_name):
 #    start_time = time.clock()
 #    pathological_test(i)
 #    print("Took:", time.clock()-start_time, "seconds")
-run_tests()
+class TestAction(argparse.Action):
+    def __init__(self, *args, **kargs):
+        kargs["nargs"]=0
+        super(TestAction, self).__init__(*args, **kargs)
+    def __call__(self, parser, namespace, values, option_strings=None):
+        run_tests()
+        exit(0)
+argparser = argparse.ArgumentParser()
+argparser.add_argument("-t", "--test", action=TestAction,
+            help="Run the test suite and exit")
+argparser.add_argument("PATTERN",
+            help="The regex that the generated file should match")
+argparser.add_argument("FILE",
+            help="The name of the file to be generated")
+args = argparser.parse_args()
+generate(args.PATTERN, args.FILE)
